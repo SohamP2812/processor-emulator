@@ -1,5 +1,8 @@
 use std::u8;
 
+const REGISTER_NAMES: [char; 6] = ['A', 'B', 'C', 'D', 'L', 'H']; 
+const FLAG_NAMES: [&str; 2] = ["ZERO", "CARRY"]; 
+
 #[derive(Copy, Clone)]
 pub struct GeneralRegister {
     pub value: u8
@@ -62,7 +65,7 @@ impl Computer {
     }
 
     pub fn run(&mut self, speed: u16) {
-        for i in 0..2 {
+        for _i in 0..3 {
             self.step();
         }
     }
@@ -77,7 +80,10 @@ impl Computer {
         let opcode = self.get_opcode(&instruction);
 
         match opcode {
-            0x0 /* MOV */ => {
+            0x0 /* NOP */ => {
+                
+            },
+            0x1 /* MOV */ => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
 
@@ -87,7 +93,7 @@ impl Computer {
                     self.cpu.general_registers[(instruction & 0x7) as usize].value = operand;
                 }
             },
-            0x1 /* LDR */ => {
+            0x2 /* LDR */ => {
                 let address: u16;
 
                 if instruction & 0x8 != 0 {
@@ -102,7 +108,7 @@ impl Computer {
 
                 self.cpu.general_registers[(instruction & 0x7) as usize].value = self.memory.read(address);
             },
-            0x2 /* STR */ => {
+            0x3 /* STR */ => {
                 let address: u16;
 
                 if instruction & 0x8 != 0 {
@@ -117,7 +123,7 @@ impl Computer {
 
                 self.memory.write(address, self.cpu.general_registers[(instruction & 0x7) as usize].value);
             },
-            0x3 /* LHL */ => {
+            0x4 /* LHL */ => {
                 let low_byte = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
                 let high_byte = self.memory.read(self.cpu.special_registers[0].value);
@@ -126,7 +132,7 @@ impl Computer {
                 self.cpu.general_registers[4].value = low_byte;
                 self.cpu.general_registers[5].value = high_byte;
             },
-            0x4 /* JMP */ => {
+            0x5 /* JMP */ => {
                 let address: u16;
 
                 if instruction & 0x8 != 0 {
@@ -141,7 +147,7 @@ impl Computer {
 
                 self.cpu.special_registers[0].value = address;
             },
-            0x5 /* JZ */ => {
+            0x6 /* JZ */ => {
                 if self.cpu.special_registers[2].value & (1 << 0) == 0 {
                     let address: u16;
 
@@ -158,7 +164,7 @@ impl Computer {
                     self.cpu.special_registers[0].value = address;
                 }
             },
-            0x6 /* ADD */ => {
+            0x7 /* ADD */ => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
                 let result;
@@ -177,7 +183,7 @@ impl Computer {
                     self.cpu.special_registers[2].value &= !(1 << 1);
                 }
             },
-            0x7 /* ADC */ => {
+            0x8 /* ADC */ => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
                 let mut result;
@@ -200,7 +206,7 @@ impl Computer {
                     self.cpu.special_registers[2].value &= !(1 << 1);
                 }
             }, 
-            0x8 /* CMP */ => {
+            0x9 /* CMP */ => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
 
@@ -218,7 +224,7 @@ impl Computer {
                     self.cpu.special_registers[2].value |= 1 << 0;
                 }
             },
-            0x9 /* SUB */ => {
+            0xA /* SUB */ => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
 
@@ -238,5 +244,26 @@ impl Computer {
 
     fn increment_pc(&mut self) {
         self.cpu.special_registers[0].value += 1;
+    }
+
+    pub fn dump(&self) {
+        println!("PC: {:#06X} SP: {:#06X}", self.cpu.special_registers[0].value, self.cpu.special_registers[1].value);
+
+        for i in 0..6 {
+            println!("{}: {:#04X}", REGISTER_NAMES[i], self.cpu.general_registers[i].value);
+        }
+
+        for i in 0..2 {
+            let flag_set = self.cpu.special_registers[2].value & (1 << i) != 0;
+            println!("{}: {}", FLAG_NAMES[i], if flag_set { "true" } else { "false" });
+        }
+    }
+
+    pub fn mem_dump(&self, start_addr: u16, bytes: usize) {
+        for i in 0..bytes {
+            print!("{:#04X} ", self.memory.read(start_addr + i as u16));
+        }
+
+        println!();
     }
 }
