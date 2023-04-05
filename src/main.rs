@@ -59,6 +59,43 @@ fn execute_command(computer: &mut Computer, command: String) {
                 println!("Invalid register code")
             }
         },
+        "READ" => {
+            if tokens.len() != 2 {
+                println!("Invalid number of arguments");
+            }
+
+            let address = u16::from_str_radix(tokens[1], 16).unwrap();
+
+            println!("{:#04X}", computer.memory.read(address));
+        },
+        "WRITE" => {
+            if tokens.len() != 3 {
+                println!("Invalid number of arguments");
+            }
+
+            let address = u16::from_str_radix(tokens[1], 16).unwrap();
+            let data = u8::from_str_radix(tokens[2], 16).unwrap();
+
+            computer.memory.write(address, data);
+        },
+        "DUMP" => {
+            if tokens.len() != 1 {
+                println!("Invalid number of arguments");
+            }
+
+            computer.dump();
+        },
+        "MEMDUMP" => {
+            if tokens.len() != 3 {
+                println!("Invalid number of arguments");
+            }
+
+            let address = u16::from_str_radix(tokens[1], 16).unwrap();
+
+            let bytes = tokens[2].parse::<usize>().unwrap();
+
+            computer.mem_dump(address, bytes);
+        },
         _ => {}
     }
 }
