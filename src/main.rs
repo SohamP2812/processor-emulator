@@ -130,7 +130,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
                 println!("Invalid number of arguments");
             }
 
-            let speed = tokens[2].parse::<u16>().unwrap();
+            let speed = tokens[1].parse::<u16>().unwrap();
 
             computer.run(speed);
         },

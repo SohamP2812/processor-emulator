@@ -3,6 +3,7 @@ use std::u8;
 pub const GENERAL_REGISTER_NAMES: &[&str] = &["A", "B", "C", "D", "L", "H"]; 
 pub const SPECIAL_REGISTER_NAMES: &[&str] = &["PC", "SP", "F"]; 
 const FLAG_NAMES: &[&str] = &["ZERO", "CARRY"]; 
+const STATUS_NAMES: &[&str] = &["HALT"]; 
 
 #[derive(Copy, Clone)]
 pub struct GeneralRegister {
@@ -16,14 +17,14 @@ pub struct SpecialRegister {
 
 pub struct CPU {
     pub general_registers: [GeneralRegister; 6],
-    pub special_registers: [SpecialRegister; 3]
+    pub special_registers: [SpecialRegister; 4]
 }
 
 impl CPU {
     pub fn new() -> CPU {
         CPU {
             general_registers: [GeneralRegister {value: 0}; 6],
-            special_registers: [SpecialRegister {value: 0}; 3]
+            special_registers: [SpecialRegister {value: 0}; 4]
         }
     }
 
@@ -66,12 +67,22 @@ impl Computer {
     }
 
     pub fn run(&mut self, speed: u16) {
-        for _i in 0..3 {
+        self.cpu.special_registers[3].value &= !(1 << 0);
+
+        loop {
             self.step();
+
+            if self.halted() {
+                break;
+            }
         }
     }
 
     pub fn step(&mut self) {
+        if self.halted() {
+            return;
+        }
+
         let instruction = self.memory.read(self.cpu.special_registers[0].value);
         self.increment_pc();
         self.execute_instruction(instruction);
@@ -234,6 +245,9 @@ impl Computer {
                 } else {
                     self.cpu.general_registers[(instruction & 0x7) as usize].value -= operand;
                 }
+            },
+            0xF /* HLT  */ => {
+                self.cpu.special_registers[3].value |= 1 << 0;
             }
             _ => {}
         }
@@ -247,6 +261,10 @@ impl Computer {
         self.cpu.special_registers[0].value += 1;
     }
 
+    fn halted(&self) -> bool {
+        return (self.cpu.special_registers[3].value & (1 << 0)) != 0;
+    }
+
     pub fn load(&mut self, start_addr: u16, data: Vec<u8>) {
         for i in 0..data.len() {
             self.memory.write(start_addr + i as u16, data[i]);
@@ -256,13 +274,24 @@ impl Computer {
     pub fn dump(&self) {
         println!("PC: {:#06X} SP: {:#06X}", self.cpu.special_registers[0].value, self.cpu.special_registers[1].value);
 
+        println!();
+
         for i in 0..6 {
             println!("{}: {:#04X}", GENERAL_REGISTER_NAMES[i], self.cpu.general_registers[i].value);
         }
 
+        println!();
+
         for i in 0..2 {
             let flag_set = self.cpu.special_registers[2].value & (1 << i) != 0;
             println!("{}: {}", FLAG_NAMES[i], if flag_set { "true" } else { "false" });
+        }
+
+        println!();
+
+        for i in 0..1 {
+            let status_set = self.cpu.special_registers[3].value & (1 << i) != 0;
+            println!("{}: {}", STATUS_NAMES[i], if status_set { "true" } else { "false" });
         }
     }
 
