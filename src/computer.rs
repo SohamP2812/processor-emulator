@@ -1,7 +1,7 @@
 use std::u8;
 
 pub const GENERAL_REGISTER_NAMES: &[&str] = &["A", "B", "C", "D", "L", "H"]; 
-pub const SPECIAL_REGISTER_NAMES: &[&str] = &["PC", "SP", "F"]; 
+pub const SPECIAL_REGISTER_NAMES: &[&str] = &["PC", "SP", "F", "S"]; 
 const FLAG_NAMES: &[&str] = &["ZERO", "CARRY"]; 
 const STATUS_NAMES: &[&str] = &["HALT"]; 
 
@@ -18,8 +18,8 @@ const I_ADD: u8 = 0x9;
 const I_ADC: u8 = 0xA;
 const I_CMP: u8 = 0xB;
 const I_SUB: u8 = 0xC;
-const I_NOP1: u8 = 0xD;
-const I_NOP2: u8 = 0xE;
+const I_NAND: u8 = 0xD;
+const I_NOR: u8 = 0xE;
 const I_HLT: u8 = 0xF;
 
 const F_ZERO: u16 = 0x00;
@@ -284,6 +284,30 @@ impl Computer {
                 } else {
                     self.cpu.general_registers[(instruction & 0x7) as usize].value -= operand;
                 }
+            },
+            I_NAND => {
+                let operand = self.memory.read(self.cpu.special_registers[0].value);
+                self.increment_pc();
+
+                if instruction & 0x8 != 0 { 
+                    self.cpu.general_registers[(instruction & 0x7) as usize].value &= self.cpu.general_registers[(operand & 0x7) as usize].value;
+                } else {
+                    self.cpu.general_registers[(instruction & 0x7) as usize].value &= operand;
+                }
+
+                self.cpu.general_registers[(instruction & 0x7) as usize].value = !self.cpu.general_registers[(instruction & 0x7) as usize].value;
+            },
+            I_NOR => {
+                let operand = self.memory.read(self.cpu.special_registers[0].value);
+                self.increment_pc();
+
+                if instruction & 0x8 != 0 { 
+                    self.cpu.general_registers[(instruction & 0x7) as usize].value |= self.cpu.general_registers[(operand & 0x7) as usize].value;
+                } else {
+                    self.cpu.general_registers[(instruction & 0x7) as usize].value |= operand;
+                }
+
+                self.cpu.general_registers[(instruction & 0x7) as usize].value = !self.cpu.general_registers[(instruction & 0x7) as usize].value;
             },
             I_HLT => {
                 self.cpu.special_registers[3].value |= 1 << S_HALT;
