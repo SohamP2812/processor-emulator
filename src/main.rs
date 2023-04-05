@@ -32,6 +32,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
 
     if tokens.len() == 0 {
         println!("Empty command");
+        return 1;
     } 
     
     let command = tokens[0];
@@ -40,6 +41,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
         "SET" => {
             if tokens.len() != 3 {
                 println!("Invalid number of arguments");
+                return 1;
             }
 
             if index_if_contains(tokens[1], GENERAL_REGISTER_NAMES, GENERAL_REGISTER_NAMES.len()) != -1 {
@@ -53,6 +55,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
         "GET" => {
             if tokens.len() != 2 {
                 println!("Invalid number of arguments");
+                return 1;
             }
 
             if index_if_contains(tokens[1], GENERAL_REGISTER_NAMES, GENERAL_REGISTER_NAMES.len()) != -1 {
@@ -66,6 +69,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
         "READ" => {
             if tokens.len() != 2 {
                 println!("Invalid number of arguments");
+                return 1;
             }
 
             let address = u16::from_str_radix(tokens[1], 16).unwrap();
@@ -75,6 +79,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
         "WRITE" => {
             if tokens.len() != 3 {
                 println!("Invalid number of arguments");
+                return 1;
             }
 
             let address = u16::from_str_radix(tokens[1], 16).unwrap();
@@ -85,6 +90,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
         "DUMP" => {
             if tokens.len() != 1 {
                 println!("Invalid number of arguments");
+                return 1;
             }
 
             computer.dump();
@@ -92,6 +98,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
         "MEMDUMP" => {
             if tokens.len() != 3 {
                 println!("Invalid number of arguments");
+                return 1;
             }
 
             let address = u16::from_str_radix(tokens[1], 16).unwrap();
@@ -103,6 +110,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
         "LOAD" => {
             if tokens.len() != 3 {
                 println!("Invalid number of arguments");
+                return 1;
             }
 
             let file_name = tokens[1];
@@ -122,7 +130,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
                 cleaned_line = cleaned_line.trim();
 
                 if cleaned_line.is_empty() {
-                    continue;   
+                    continue;    
                 }
 
                 let first_two_chars = &cleaned_line[0..2];
@@ -144,6 +152,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
         "RUN" => {
             if tokens.len() != 2 {
                 println!("Invalid number of arguments");
+                return 1;
             }
 
             let speed = tokens[1].parse::<u16>().unwrap();
@@ -153,6 +162,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
         "STEP" => {
             if tokens.len() != 1 {
                 println!("Invalid number of arguments");
+                return 1;
             }
 
             computer.step();
