@@ -115,12 +115,17 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
             
             for mut token in contents.trim().split_whitespace() {
                 let first_two_chars = &token[0..2];
+                let mut base = 10;
                 
                 if first_two_chars == "0x" || first_two_chars == "0X" {
                     token = &token[2..token.len()]; // Does this work (memory leak)?
+                    base = 16;
+                } else if first_two_chars == "0b" {
+                    token = &token[2..token.len()];
+                    base = 2;
                 }
 
-                data.push(u8::from_str_radix(token, 16).unwrap());
+                data.push(u8::from_str_radix(token, base).unwrap());
             }
 
             computer.load(start_addr, data);

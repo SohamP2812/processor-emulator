@@ -144,7 +144,24 @@ impl Computer {
                 self.cpu.general_registers[4].value = low_byte;
                 self.cpu.general_registers[5].value = high_byte;
             },
-            0x5 /* JMP */ => {
+            0x5 /* PUSH */ => {
+                let value: u8; 
+
+                if instruction & 0x8 != 0 { 
+                    value = self.cpu.general_registers[(instruction & 0x7) as usize].value;
+                } else {
+                    value = self.memory.read(self.cpu.special_registers[0].value);
+                    self.increment_pc();
+                }
+
+                self.decrement_sp();
+                self.memory.write(self.cpu.special_registers[1].value, value);
+            },
+            0x6 /* POP */ => {
+                self.cpu.general_registers[(instruction & 0x7) as usize].value = self.memory.read(self.cpu.special_registers[1].value);
+                self.increment_sp();
+            },
+            0x7 /* JMP */ => {
                 let address: u16;
 
                 if instruction & 0x8 != 0 {
@@ -159,7 +176,7 @@ impl Computer {
 
                 self.cpu.special_registers[0].value = address;
             },
-            0x6 /* JZ */ => {
+            0x8 /* JZ */ => {
                 if self.cpu.special_registers[2].value & (1 << 0) == 0 {
                     let address: u16;
 
@@ -176,7 +193,7 @@ impl Computer {
                     self.cpu.special_registers[0].value = address;
                 }
             },
-            0x7 /* ADD */ => {
+            0x9 /* ADD */ => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
                 let result;
@@ -195,7 +212,7 @@ impl Computer {
                     self.cpu.special_registers[2].value &= !(1 << 1);
                 }
             },
-            0x8 /* ADC */ => {
+            0xA /* ADC */ => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
                 let mut result;
@@ -218,7 +235,7 @@ impl Computer {
                     self.cpu.special_registers[2].value &= !(1 << 1);
                 }
             }, 
-            0x9 /* CMP */ => {
+            0xB /* CMP */ => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
 
@@ -236,7 +253,7 @@ impl Computer {
                     self.cpu.special_registers[2].value |= 1 << 0;
                 }
             },
-            0xA /* SUB */ => {
+            0xC /* SUB */ => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
 
@@ -259,6 +276,14 @@ impl Computer {
 
     fn increment_pc(&mut self) {
         self.cpu.special_registers[0].value += 1;
+    }
+
+    fn increment_sp(&mut self) {
+        self.cpu.special_registers[1].value += 1;
+    }
+
+    fn decrement_sp(&mut self) {
+        self.cpu.special_registers[1].value -= 1;
     }
 
     fn halted(&self) -> bool {
