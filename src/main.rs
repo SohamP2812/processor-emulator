@@ -19,11 +19,15 @@ fn main() {
             Err(error) => panic!("Problem reading line: {:?}", error),
         };
 
-        execute_command(&mut computer, buffer);
+        let result = execute_command(&mut computer, buffer);
+
+        if result == 0 {
+            break;
+        }
     }
 }
 
-fn execute_command(computer: &mut Computer, command: String) {
+fn execute_command(computer: &mut Computer, command: String) -> u8 {
     let tokens: Vec<&str> = command.trim().split(" ").collect();
 
     if tokens.len() == 0 {
@@ -43,7 +47,7 @@ fn execute_command(computer: &mut Computer, command: String) {
             } else if index_if_contains(tokens[1], SPECIAL_REGISTER_NAMES, SPECIAL_REGISTER_NAMES.len()) != -1 {
                 computer.cpu.special_registers[index_if_contains(tokens[1], SPECIAL_REGISTER_NAMES, SPECIAL_REGISTER_NAMES.len()) as usize].value = u16::from_str_radix(tokens[2], 16).unwrap();
             } else {
-                println!("Invalid register code")
+                println!("Invalid register code");
             }
         }, 
         "GET" => {
@@ -56,7 +60,7 @@ fn execute_command(computer: &mut Computer, command: String) {
             } else if index_if_contains(tokens[1], SPECIAL_REGISTER_NAMES, SPECIAL_REGISTER_NAMES.len()) != -1 {
                 println!("{:#06X}", computer.cpu.special_registers[index_if_contains(tokens[1], SPECIAL_REGISTER_NAMES, SPECIAL_REGISTER_NAMES.len()) as usize].value);
             } else {
-                println!("Invalid register code")
+                println!("Invalid register code");
             }
         },
         "READ" => {
@@ -96,8 +100,13 @@ fn execute_command(computer: &mut Computer, command: String) {
 
             computer.mem_dump(address, bytes);
         },
+        "END" => {
+            return 0;
+        }
         _ => {}
     }
+
+    1
 }
 
 fn index_if_contains<T: std::cmp::PartialEq>(target: T, array: &[T], size: usize) -> isize {
