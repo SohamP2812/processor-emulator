@@ -5,6 +5,28 @@ pub const SPECIAL_REGISTER_NAMES: &[&str] = &["PC", "SP", "F"];
 const FLAG_NAMES: &[&str] = &["ZERO", "CARRY"]; 
 const STATUS_NAMES: &[&str] = &["HALT"]; 
 
+const I_NOP: u8 = 0x0;
+const I_MOV: u8 = 0x1;
+const I_LDR: u8 = 0x2;
+const I_STR: u8 = 0x3;
+const I_LHL: u8 = 0x4;
+const I_PUSH: u8 = 0x5;
+const I_POP: u8 = 0x6;
+const I_JMP: u8 = 0x7;
+const I_JZ: u8 = 0x8;
+const I_ADD: u8 = 0x9;
+const I_ADC: u8 = 0xA;
+const I_CMP: u8 = 0xB;
+const I_SUB: u8 = 0xC;
+const I_NOP1: u8 = 0xD;
+const I_NOP2: u8 = 0xE;
+const I_HLT: u8 = 0xF;
+
+const F_ZERO: i32 = 0;
+const F_CARRY: i32 = 1;
+
+const S_HALT: i32 = 0;
+
 #[derive(Copy, Clone)]
 pub struct GeneralRegister {
     pub value: u8
@@ -67,7 +89,7 @@ impl Computer {
     }
 
     pub fn run(&mut self, speed: u16) {
-        self.cpu.special_registers[3].value &= !(1 << 0);
+        self.cpu.special_registers[3].value &= !(1 << S_HALT);
 
         loop {
             self.step();
@@ -92,10 +114,10 @@ impl Computer {
         let opcode = self.get_opcode(&instruction);
 
         match opcode {
-            0x0 /* NOP */ => {
-                
+            I_NOP => {
+                return;
             },
-            0x1 /* MOV */ => {
+            I_MOV => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
 
@@ -105,7 +127,7 @@ impl Computer {
                     self.cpu.general_registers[(instruction & 0x7) as usize].value = operand;
                 }
             },
-            0x2 /* LDR */ => {
+            I_LDR => {
                 let address: u16;
 
                 if instruction & 0x8 != 0 {
@@ -120,7 +142,7 @@ impl Computer {
 
                 self.cpu.general_registers[(instruction & 0x7) as usize].value = self.memory.read(address);
             },
-            0x3 /* STR */ => {
+            I_STR => {
                 let address: u16;
 
                 if instruction & 0x8 != 0 {
@@ -135,7 +157,7 @@ impl Computer {
 
                 self.memory.write(address, self.cpu.general_registers[(instruction & 0x7) as usize].value);
             },
-            0x4 /* LHL */ => {
+            I_LHL => {
                 let low_byte = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
                 let high_byte = self.memory.read(self.cpu.special_registers[0].value);
@@ -144,7 +166,7 @@ impl Computer {
                 self.cpu.general_registers[4].value = low_byte;
                 self.cpu.general_registers[5].value = high_byte;
             },
-            0x5 /* PUSH */ => {
+            I_PUSH => {
                 let value: u8; 
 
                 if instruction & 0x8 != 0 { 
@@ -157,11 +179,11 @@ impl Computer {
                 self.decrement_sp();
                 self.memory.write(self.cpu.special_registers[1].value, value);
             },
-            0x6 /* POP */ => {
+            I_POP => {
                 self.cpu.general_registers[(instruction & 0x7) as usize].value = self.memory.read(self.cpu.special_registers[1].value);
                 self.increment_sp();
             },
-            0x7 /* JMP */ => {
+            I_JMP => {
                 let address: u16;
 
                 if instruction & 0x8 != 0 {
@@ -176,8 +198,8 @@ impl Computer {
 
                 self.cpu.special_registers[0].value = address;
             },
-            0x8 /* JZ */ => {
-                if self.cpu.special_registers[2].value & (1 << 0) == 0 {
+            I_JZ => {
+                if self.cpu.special_registers[2].value & (1 << F_ZERO) == 0 {
                     let address: u16;
 
                     if instruction & 0x8 != 0 {
@@ -193,7 +215,7 @@ impl Computer {
                     self.cpu.special_registers[0].value = address;
                 }
             },
-            0x9 /* ADD */ => {
+            I_ADD => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
                 let result;
@@ -212,7 +234,7 @@ impl Computer {
                     self.cpu.special_registers[2].value &= !(1 << 1);
                 }
             },
-            0xA /* ADC */ => {
+            I_ADC => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
                 let mut result;
@@ -230,12 +252,12 @@ impl Computer {
                 self.cpu.general_registers[(instruction & 0x7) as usize].value = result.0;
 
                 if result.1 {
-                    self.cpu.special_registers[2].value |= 1 << 1;
+                    self.cpu.special_registers[2].value |= 1 << F_CARRY;
                 } else {
-                    self.cpu.special_registers[2].value &= !(1 << 1);
+                    self.cpu.special_registers[2].value &= !(1 << F_CARRY);
                 }
             }, 
-            0xB /* CMP */ => {
+            I_CMP => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
 
@@ -248,12 +270,12 @@ impl Computer {
                 }
 
                 if comparison != 0 {
-                    self.cpu.special_registers[2].value &= !(1 << 0);
+                    self.cpu.special_registers[2].value &= !(1 << F_ZERO);
                 } else {
-                    self.cpu.special_registers[2].value |= 1 << 0;
+                    self.cpu.special_registers[2].value |= 1 << F_ZERO;
                 }
             },
-            0xC /* SUB */ => {
+            I_SUB => {
                 let operand = self.memory.read(self.cpu.special_registers[0].value);
                 self.increment_pc();
 
@@ -263,10 +285,12 @@ impl Computer {
                     self.cpu.general_registers[(instruction & 0x7) as usize].value -= operand;
                 }
             },
-            0xF /* HLT  */ => {
-                self.cpu.special_registers[3].value |= 1 << 0;
+            I_HLT => {
+                self.cpu.special_registers[3].value |= 1 << S_HALT;
             }
-            _ => {}
+            _ => {
+                return;
+            }
         }
     }
 
@@ -287,7 +311,7 @@ impl Computer {
     }
 
     fn halted(&self) -> bool {
-        return (self.cpu.special_registers[3].value & (1 << 0)) != 0;
+        return (self.cpu.special_registers[3].value & (1 << S_HALT)) != 0;
     }
 
     pub fn load(&mut self, start_addr: u16, data: Vec<u8>) {
