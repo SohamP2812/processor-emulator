@@ -100,10 +100,28 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
 
             computer.mem_dump(address, bytes);
         },
+        "RUN" => {
+            if tokens.len() != 2 {
+                println!("Invalid number of arguments");
+            }
+
+            let speed = tokens[2].parse::<u16>().unwrap();
+
+            computer.run(speed);
+        },
+        "STEP" => {
+            if tokens.len() != 1 {
+                println!("Invalid number of arguments");
+            }
+
+            computer.step();
+        },
         "END" => {
             return 0;
         }
-        _ => {}
+        _ => {
+            println!("Invalid command");
+        }
     }
 
     1
