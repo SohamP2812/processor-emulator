@@ -109,23 +109,34 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
 
             let start_addr = u16::from_str_radix(tokens[2], 16).unwrap();
 
-            let contents = std::fs::read_to_string(file_name).unwrap();
-
             let mut data: Vec<u8> = Vec::new();
+
+            let file = std::fs::File::open(file_name).unwrap(); 
+            let lines = std::io::BufRead::lines(std::io::BufReader::new(file)); 
             
-            for mut token in contents.trim().split_whitespace() {
-                let first_two_chars = &token[0..2];
+            for wrapped_line in lines {
+                let line = wrapped_line.unwrap();
+
+                let mut cleaned_line = &line[0..line.find(";").unwrap_or(line.len())];
+
+                cleaned_line = cleaned_line.trim();
+
+                if cleaned_line.is_empty() {
+                    continue;   
+                }
+
+                let first_two_chars = &cleaned_line[0..2];
                 let mut base = 10;
                 
                 if first_two_chars == "0x" || first_two_chars == "0X" {
-                    token = &token[2..token.len()]; // Does this work (memory leak)?
+                    cleaned_line = &cleaned_line[2..cleaned_line.len()]; // Does this work (memory leak of old full arr)?
                     base = 16;
                 } else if first_two_chars == "0b" {
-                    token = &token[2..token.len()];
+                    cleaned_line = &cleaned_line[2..cleaned_line.len()];
                     base = 2;
                 }
 
-                data.push(u8::from_str_radix(token, base).unwrap());
+                data.push(u8::from_str_radix(cleaned_line, base).unwrap());
             }
 
             computer.load(start_addr, data);
