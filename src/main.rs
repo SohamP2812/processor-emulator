@@ -100,6 +100,31 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
 
             computer.mem_dump(address, bytes);
         },
+        "LOAD" => {
+            if tokens.len() != 3 {
+                println!("Invalid number of arguments");
+            }
+
+            let file_name = tokens[1];
+
+            let start_addr = u16::from_str_radix(tokens[2], 16).unwrap();
+
+            let contents = std::fs::read_to_string(file_name).unwrap();
+
+            let mut data: Vec<u8> = Vec::new();
+            
+            for mut token in contents.trim().split_whitespace() {
+                let first_two_chars = &token[0..2];
+                
+                if first_two_chars == "0x" || first_two_chars == "0X" {
+                    token = &token[2..token.len()]; // Does this work (memory leak)?
+                }
+
+                data.push(u8::from_str_radix(token, 16).unwrap());
+            }
+
+            computer.load(start_addr, data);
+        },
         "RUN" => {
             if tokens.len() != 2 {
                 println!("Invalid number of arguments");

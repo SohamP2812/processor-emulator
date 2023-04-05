@@ -247,6 +247,12 @@ impl Computer {
         self.cpu.special_registers[0].value += 1;
     }
 
+    pub fn load(&mut self, start_addr: u16, data: Vec<u8>) {
+        for i in 0..data.len() {
+            self.memory.write(start_addr + i as u16, data[i]);
+        }
+    }
+
     pub fn dump(&self) {
         println!("PC: {:#06X} SP: {:#06X}", self.cpu.special_registers[0].value, self.cpu.special_registers[1].value);
 
