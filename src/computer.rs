@@ -22,10 +22,10 @@ const I_NOP1: u8 = 0xD;
 const I_NOP2: u8 = 0xE;
 const I_HLT: u8 = 0xF;
 
-const F_ZERO: i32 = 0;
-const F_CARRY: i32 = 1;
+const F_ZERO: u16 = 0x00;
+const F_CARRY: u16 = 0x01;
 
-const S_HALT: i32 = 0;
+const S_HALT: u16 = 0x00;
 
 #[derive(Copy, Clone)]
 pub struct GeneralRegister {
