@@ -1,7 +1,8 @@
 use std::u8;
 
-const REGISTER_NAMES: [char; 6] = ['A', 'B', 'C', 'D', 'L', 'H']; 
-const FLAG_NAMES: [&str; 2] = ["ZERO", "CARRY"]; 
+pub const GENERAL_REGISTER_NAMES: &[&str] = &["A", "B", "C", "D", "L", "H"]; 
+pub const SPECIAL_REGISTER_NAMES: &[&str] = &["PC", "SP", "F"]; 
+const FLAG_NAMES: &[&str] = &["ZERO", "CARRY"]; 
 
 #[derive(Copy, Clone)]
 pub struct GeneralRegister {
@@ -250,7 +251,7 @@ impl Computer {
         println!("PC: {:#06X} SP: {:#06X}", self.cpu.special_registers[0].value, self.cpu.special_registers[1].value);
 
         for i in 0..6 {
-            println!("{}: {:#04X}", REGISTER_NAMES[i], self.cpu.general_registers[i].value);
+            println!("{}: {:#04X}", GENERAL_REGISTER_NAMES[i], self.cpu.general_registers[i].value);
         }
 
         for i in 0..2 {
