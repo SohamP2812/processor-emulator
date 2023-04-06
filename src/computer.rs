@@ -88,15 +88,27 @@ impl Computer {
         }
     }
 
-    pub fn run(&mut self, speed: u16) {
+    pub fn run(&mut self, speed: u64) {
         self.cpu.special_registers[3].value &= !(1 << S_HALT);
 
+        let ms_per_cycle = 1000 / speed;
+        let mut last_step = std::time::Instant::now();
+
         loop {
-            self.step();
+            let now = std::time::Instant::now();
+
+            if (now - last_step).as_millis() > ms_per_cycle as u128 {
+                self.step();
+
+                last_step = now; // Does this render 'now' invalid (ownership) (need to clone?)?
+            }
 
             if self.halted() {
                 break;
             }
+            
+            let time_to_sleep = std::time::Duration::from_millis(ms_per_cycle - now.elapsed().as_millis() as u64);
+            std::thread::sleep(time_to_sleep);
         }
     }
 

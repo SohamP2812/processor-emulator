@@ -155,7 +155,7 @@ fn execute_command(computer: &mut Computer, command: String) -> u8 {
                 return 1;
             }
 
-            let speed = tokens[1].parse::<u16>().unwrap();
+            let speed = tokens[1].parse::<u64>().unwrap();
 
             computer.run(speed);
         },
