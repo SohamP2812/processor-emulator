@@ -208,7 +208,7 @@ impl Computer {
                     address = (low_byte as u16) | ((high_byte as u16) << 0x8);
                 }
 
-                self.cpu.special_registers[0].value = address;
+                self.cpu.special_registers[0].value += address;
             },
             I_JZ => {
                 if self.cpu.special_registers[2].value & (1 << F_ZERO) == 0 {
@@ -224,7 +224,7 @@ impl Computer {
                         address = (low_byte as u16) | ((high_byte as u16) << 0x8);
                     }
 
-                    self.cpu.special_registers[0].value = address;
+                    self.cpu.special_registers[0].value += address;
                 }
             },
             I_ADD => {

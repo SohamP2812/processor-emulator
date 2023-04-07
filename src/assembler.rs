@@ -28,9 +28,26 @@ struct Parser {
     tokens: Vec<Token>
 }
 
+impl Parser {
+    pub fn new() -> Parser {
+        Parser {
+            tokens: Vec::new(),
+        }
+    }
+}
+
 struct Assembler {
     parser: Parser,
-    
+    output: Vec<u8>
+}
+
+impl Assembler {
+    pub fn new() -> Assembler {
+        Assembler {
+            parser: Parser::new(),
+            output: Vec::new(),
+        }
+    }
 }
 
 fn main() {
