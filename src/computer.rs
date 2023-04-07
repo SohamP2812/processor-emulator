@@ -209,9 +209,9 @@ impl Computer {
                 }
 
                 if address > 0 {
-                    self.cpu.special_registers[0].value += address as u16;
+                    self.cpu.special_registers[0].value += address.abs() as u16;
                 } else {
-                    self.cpu.special_registers[0].value -= address as u16;
+                    self.cpu.special_registers[0].value -= address.abs() as u16;
                 }
             },
             I_JZ => {
@@ -229,9 +229,9 @@ impl Computer {
                     }
 
                     if address > 0 {
-                        self.cpu.special_registers[0].value += address as u16;
+                        self.cpu.special_registers[0].value += address.abs() as u16;
                     } else {
-                        self.cpu.special_registers[0].value -= address as u16;
+                        self.cpu.special_registers[0].value -= address.abs() as u16;
                     }
                 }
             },
