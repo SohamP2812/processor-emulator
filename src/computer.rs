@@ -196,35 +196,43 @@ impl Computer {
                 self.increment_sp();
             },
             I_JMP => {
-                let address: u16;
+                let address: i16;
 
                 if instruction & 0x8 != 0 {
-                    address = self.cpu.hl();
+                    address = self.cpu.hl() as i16;
                 } else {
                     let low_byte = self.memory.read(self.cpu.special_registers[0].value);
                     self.increment_pc();
                     let high_byte = self.memory.read(self.cpu.special_registers[0].value);
                     self.increment_pc();
-                    address = (low_byte as u16) | ((high_byte as u16) << 0x8);
+                    address = (low_byte as i16) | ((high_byte as i16) << 0x8);
                 }
 
-                self.cpu.special_registers[0].value += (address as i16);
+                if address > 0 {
+                    self.cpu.special_registers[0].value += address as u16;
+                } else {
+                    self.cpu.special_registers[0].value -= address as u16;
+                }
             },
             I_JZ => {
                 if self.cpu.special_registers[2].value & (1 << F_ZERO) == 0 {
-                    let address: u16;
+                    let address: i16;
 
                     if instruction & 0x8 != 0 {
-                        address = self.cpu.hl();
+                        address = self.cpu.hl() as i16;
                     } else {
                         let low_byte = self.memory.read(self.cpu.special_registers[0].value);
                         self.increment_pc();
                         let high_byte = self.memory.read(self.cpu.special_registers[0].value);
                         self.increment_pc();
-                        address = (low_byte as u16) | ((high_byte as u16) << 0x8);
+                        address = (low_byte as i16) | ((high_byte as i16) << 0x8);
                     }
 
-                    self.cpu.special_registers[0].value += (address as i16);
+                    if address > 0 {
+                        self.cpu.special_registers[0].value += address as u16;
+                    } else {
+                        self.cpu.special_registers[0].value -= address as u16;
+                    }
                 }
             },
             I_ADD => {
